@@ -4,6 +4,7 @@ import os
 import sqlite3
 from html import escape
 
+from aiohttp import web
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -34,6 +35,9 @@ DB_PATH = os.getenv("DB_PATH", "tracks.db")
 DELETE_DUPLICATES = os.getenv("DELETE_DUPLICATES", "false").strip().lower() in (
     "1", "true", "yes", "on",
 )
+
+# Порт для веб-сервера (Render задаёт PORT сам; по умолчанию 10000)
+PORT = int(os.getenv("PORT", "10000"))
 
 if not BOT_TOKEN or not GROUP_ID or not ADMIN_IDS_RAW:
     raise RuntimeError("Не заданы переменные окружения: BOT_TOKEN, GROUP_ID, ADMIN_IDS")
@@ -260,10 +264,30 @@ async def on_group_media(message: Message):
 dp.include_routers(private, group)
 
 
+# ---------- HTTP-сервер для Render ----------
+async def health(request: web.Request) -> web.Response:
+    return web.Response(text="OK")
+
+
+async def start_web_server() -> web.AppRunner:
+    app = web.Application()
+    app.router.add_get("/", health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    await web.TCPSite(runner, host="0.0.0.0", port=PORT).start()
+    logging.info("HTTP-сервер запущен на порту %s", PORT)
+    return runner
+
+
 async def main():
-    logging.info("Администраторы: %s", sorted(ADMIN_IDS))
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+    runner = await start_web_server()
+    try:
+        logging.info("Версия: дубликаты + новая подпись")  # видно в логах, что код новый
+        logging.info("Администраторы: %s", sorted(ADMIN_IDS))
+        await bot.delete_webhook(drop_pending_updates=True)
+        await dp.start_polling(bot)
+    finally:
+        await runner.cleanup()
 
 
 if __name__ == "__main__":
