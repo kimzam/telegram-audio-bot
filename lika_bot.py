@@ -1,3 +1,4 @@
+
 import asyncio
 import logging
 import os
@@ -26,7 +27,7 @@ LINK_TEXT = os.getenv("LINK_TEXT", "Музыка ИИ")
 LINK_URL = os.getenv("LINK_URL", "https://t.me/your_channel")
 
 # Стиль подписи: quote | bold | plain
-CAPTION_STYLE = os.getenv("CAPTION_STYLE", "quote").strip().lower()
+CAPTION_STYLE = os.getenv("CAPTION_STYLE", "plain").strip().lower()
 
 # Файл базы с уже опубликованными треками
 DB_PATH = os.getenv("DB_PATH", "tracks.db")
@@ -134,11 +135,11 @@ def where_html(msg_id: int) -> str:
 def build_caption() -> str:
     link = f'<a href="{escape(LINK_URL, quote=True)}">{escape(LINK_TEXT)}</a>'
     styles = {
-        "plain": f"🎧 {link}",
+        "plain": f"🎵 {link}",
         "bold": f"🎶 <b>{link}</b> 🎶",
         "quote": f"<blockquote>🎧 <b>{link}</b> ✨</blockquote>",
     }
-    return styles.get(CAPTION_STYLE, styles["quote"])
+    return styles.get(CAPTION_STYLE, styles["plain"])
 
 
 # ---------- Публикация в группу ----------
