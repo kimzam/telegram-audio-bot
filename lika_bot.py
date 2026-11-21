@@ -17,7 +17,7 @@ from aiogram.types import (
     Message,
 )
 
-# ---------- Настройки из переменных окружения ----------
+# --------- Настройки из переменных окружения ---------
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GROUP_ID = os.getenv("GROUP_ID")          # например: -1001234567890
 ADMIN_IDS_RAW = os.getenv("ADMIN_IDS")    # например: 111111111,222222222
